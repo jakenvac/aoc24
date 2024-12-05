@@ -1,0 +1,9 @@
+# spaces to indent
+--indent 4
+
+# column width, 80 chars
+--maxWidth 100
+
+# indent cases in switch
+--indentcase true
+

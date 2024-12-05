@@ -3,9 +3,10 @@ struct DayFive: Solver {
     let pagesRegex = #/^(\d{2},)+\d{2}$/#.anchorsMatchLineEndings()
 
     func parseRules(input: String) -> [Int: [Int]] {
-        let rules = input.matches(of: ruleRegex).map { (Int($0.output.1)!, [Int($0.output.2)!]) }
         return Dictionary(
-            rules,
+            input.matches(of: ruleRegex).map {
+                (Int($0.output.1)!, [Int($0.output.2)!])
+            },
             uniquingKeysWith: { $0 + $1 }
         )
     }
@@ -16,40 +17,29 @@ struct DayFive: Solver {
         }
     }
 
-    func isListValid(list: [Int], rules: [Int: [Int]]) -> Bool {
-        return (1 ..< list.count).allSatisfy { pI in
-            guard let preceeds = rules[list[pI]] else {
-                return true
-            }
-            let preceeding = list[0 ..< pI]
-            return Set(preceeds).intersection(Set(preceeding)).isEmpty
-        }
+    func sortList(list: [Int], rules: [Int: [Int]]) -> [Int] {
+        return list.sorted(by: { (rules[$0] ?? []).contains($1) })
     }
 
-    func swapPages(b: Int, rule: [Int]?) -> Bool {
-        guard let rule = rule else {
-            return true
-        }
-        return rule.contains(b)
+    func isSorted(list: [Int], rules: [Int: [Int]]) -> Bool {
+        return list == sortList(list: list, rules: rules)
     }
 
+    // Part 1
     func a(input: String) -> Int {
         let rules = parseRules(input: input)
-        let pagesLists = parsePageLists(input: input)
-        return pagesLists.reduce(0) { acc, list in
-            isListValid(list: list, rules: rules) ? acc + list[(list.count) / 2] : acc
+        return parsePageLists(input: input).reduce(0) {
+            isSorted(list: $1, rules: rules) ? $0 + $1[($1.count) / 2] : $0
         }
     }
 
+    // Part 2
     func b(input: String) -> Int {
         let rules = parseRules(input: input)
-        let pagesLists = parsePageLists(input: input)
-        let brokenLists = pagesLists.filter { !isListValid(list: $0, rules: rules) }
-
-        return brokenLists
-            .map { list in list.sorted(by: { a, b in swapPages(b: b, rule: rules[a]) }) }
-            .reduce(0) { acc, sorted in
-                acc + sorted[sorted.count / 2]
+        return parsePageLists(input: input)
+            .reduce(0) { acc, list in
+                let s = sortList(list: list, rules: rules)
+                return list == s ? acc : acc + s[s.count / 2]
             }
     }
 }

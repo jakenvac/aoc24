@@ -6,6 +6,7 @@ let days: [Solver.Type] = [
     DayThree.self,
     DayFour.self,
     DayFive.self,
+    DaySix.self,
 ]
 
 struct AOCError: Error {
@@ -17,10 +18,10 @@ enum DayPart: String, CaseIterable, ExpressibleByArgument {
 }
 
 struct AOC: ParsableCommand {
-    @Argument(help: "The day to process")
+    @Argument(help: "The day to process (1 - 25)")
     var day: Int
 
-    @Argument(help: "The part of the day to process")
+    @Argument(help: "The part of the day to process (a or b)")
     var part: DayPart
 
     func run() throws {

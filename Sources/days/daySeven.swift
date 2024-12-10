@@ -29,6 +29,28 @@ struct DaySeven: Solver {
         return combos
     }
 
+    // TODO: maybe pass in the test here and exit early if its found
+    func executeCombosOf(operators: [Operator], on: [Int]) -> [Int] {
+        guard on.count > 1 else {
+            return on
+        }
+
+        // guard on.count > 2 else {
+        //     return operators.map { $0.appl(lhs: on[0], rhs: on[1]) }
+        // }
+
+        var totals: [Int] = []
+
+        for op in operators {
+            let preTotals = executeCombosOf(operators: operators, on: Array(on.dropLast()))
+            for pt in preTotals {
+                totals.append(op.appl(lhs: pt, rhs: on.last!))
+            }
+        }
+
+        return totals
+    }
+
     enum Operator: CaseIterable, CustomStringConvertible {
         case Add, Multiply, Concat
 
@@ -69,41 +91,23 @@ struct DaySeven: Solver {
         }
     }
 
-    func isComboTrue(operands: [Int], operators: [Operator], test: Int) -> Bool {
-        var str = "\(operands[0])"
-        let opCount = operands.count - 1
-        let applied = (0 ..< opCount).reduce(operands[0]) { lhs, oi in
-            let op = operators[oi]
-            let rhs = operands[oi + 1]
-            str = str + "\(op)\(rhs)"
-            return op.appl(lhs: lhs, rhs: rhs)
-        }
-        print("Trying \(str). Got: \(applied). \(applied == test ? "HIT!" : "")")
-        return applied == test
-    }
-
     func solveEquation(eq: Equation, operators: [Operator]) -> Int {
-        print(eq)
         let (test, operands) = (eq.test, eq.operands)
-        let opCount = operands.count - 1
-        for opCombo in getCombosOf(operators: operators, length: opCount) {
-            if isComboTrue(operands: operands, operators: opCombo, test: test) {
-                return test
-            }
+        let combos = executeCombosOf(operators: operators, on: operands)
+        if combos.contains(test) {
+            return test
         }
         return 0
     }
 
     func a(input: String) -> Int {
         let eqs = parseInput(input: input)
-        print("Solving \(eqs.count) equations!")
         let operatorsToUse = [Operator.Add, Operator.Multiply]
         return eqs.reduce(0) { acc, eq in acc + solveEquation(eq: eq, operators: operatorsToUse) }
     }
 
     func b(input: String) -> Int {
         let eqs = parseInput(input: input)
-        print("Solving \(eqs.count) equations!")
         let operatorsToUse = Operator.allCases
         return eqs.reduce(0) { acc, eq in acc + solveEquation(eq: eq, operators: operatorsToUse) }
     }

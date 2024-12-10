@@ -54,7 +54,7 @@ struct DayEight: Solver {
         return antis
     }
 
-    func getAntinodes(byLine: Set<Vec2>) -> Set<Vec2> {
+    func getAntinodes(byLine: Set<Vec2>, limit: Int) -> Set<Vec2> {
         if byLine.count <= 1 {
             return Set()
         }
@@ -63,8 +63,7 @@ struct DayEight: Solver {
             for b in byLine {
                 guard a != b else { continue }
                 let distance = a - b
-                // dirty hack, the extras get filtered out
-                for i in 0 ... 100 {
+                for i in 0 ... limit {
                     antis.formUnion([a + distance * i, b - distance * i])
                 }
             }
@@ -78,7 +77,9 @@ struct DayEight: Solver {
             if byDistance {
                 antis.formUnion(getAntinodes(byDistance: value))
             } else {
-                antis.formUnion(getAntinodes(byLine: value))
+                // cheat way of not keeping track of bounds yet
+                let limit = Vec2(x: map.width, y: map.height).length
+                antis.formUnion(getAntinodes(byLine: value, limit: limit))
             }
         }
         let widthRange = (0 ..< map.width)

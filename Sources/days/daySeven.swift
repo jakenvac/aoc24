@@ -1,70 +1,45 @@
 struct DaySeven: Solver {
-    struct Equation: CustomStringConvertible {
+    struct Equation {
         let test: Int
         let operands: [Int]
-
-        var description: String {
-            return "\(test): \(operands.map { "\($0) " }) ======="
-        }
     }
 
-    func getCombosOf(operators: [Operator], length: Int) -> [[Operator]] {
-        guard length > 0 else {
-            return [[]]
-        }
-
-        guard length > 1 else {
-            return operators.map { [$0] }
-        }
-
-        var combos: [[Operator]] = []
-
-        for op in operators {
-            let preCombos = getCombosOf(operators: operators, length: length - 1)
-            for pc in preCombos {
-                combos.append(pc + [op])
-            }
-        }
-
-        return combos
-    }
-
-    // TODO: maybe pass in the test here and exit early if its found
-    func executeCombosOf(operators: [Operator], on: [Int]) -> [Int] {
+    func executeCombosOf(
+        operators: [Operator],
+        on: [Int],
+        test: Int,
+        cache: inout [Int: Set<Int>]
+    ) -> Set<Int> {
         guard on.count > 1 else {
-            return on
+            return Set(on)
         }
 
-        // guard on.count > 2 else {
-        //     return operators.map { $0.appl(lhs: on[0], rhs: on[1]) }
-        // }
+        if let cached = cache[on.hashValue] {
+            return cached
+        }
 
-        var totals: [Int] = []
+        var totals: Set<Int> = Set()
 
         for op in operators {
-            let preTotals = executeCombosOf(operators: operators, on: Array(on.dropLast()))
+            let preTotals = executeCombosOf(
+                operators: operators,
+                on: Array(on.dropLast()),
+                test: test,
+                cache: &cache
+            )
             for pt in preTotals {
-                totals.append(op.appl(lhs: pt, rhs: on.last!))
+                if pt <= test {
+                    totals.insert(op.appl(lhs: pt, rhs: on.last!))
+                }
             }
         }
 
+        cache[on.hashValue] = totals
         return totals
     }
 
-    enum Operator: CaseIterable, CustomStringConvertible {
+    enum Operator {
         case Add, Multiply, Concat
-
-        static var count: Int {
-            return Operator.allCases.count
-        }
-
-        var description: String {
-            return switch self {
-                case .Add: "\u{1B}[32m + \u{1B}[0m"
-                case .Multiply: "\u{1B}[31m * \u{1b}[0m"
-                case .Concat: "\u{1B}[33m || \u{1B}[0m"
-            }
-        }
 
         func appl(lhs: Int, rhs: Int) -> Int {
             switch self {
@@ -93,7 +68,13 @@ struct DaySeven: Solver {
 
     func solveEquation(eq: Equation, operators: [Operator]) -> Int {
         let (test, operands) = (eq.test, eq.operands)
-        let combos = executeCombosOf(operators: operators, on: operands)
+        var cache = [Int: Set<Int>]()
+        let combos = executeCombosOf(
+            operators: operators,
+            on: operands,
+            test: test,
+            cache: &cache
+        )
         if combos.contains(test) {
             return test
         }
@@ -108,7 +89,7 @@ struct DaySeven: Solver {
 
     func b(input: String) -> Int {
         let eqs = parseInput(input: input)
-        let operatorsToUse = Operator.allCases
+        let operatorsToUse = [Operator.Add, Operator.Multiply, Operator.Concat]
         return eqs.reduce(0) { acc, eq in acc + solveEquation(eq: eq, operators: operatorsToUse) }
     }
 }

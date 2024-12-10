@@ -8,6 +8,7 @@ let days: [Solver.Type] = [
     DayFive.self,
     DaySix.self,
     DaySeven.self,
+    DayEight.self,
 ]
 
 struct AOCError: Error {

@@ -228,7 +228,7 @@ struct DaySix: Solver {
                 positions: current
             )
 
-            if let newPath = newPath {
+            if let _ = newPath {
                 return acc
             }
 

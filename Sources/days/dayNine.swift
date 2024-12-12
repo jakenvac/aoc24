@@ -44,19 +44,16 @@ struct DayNine: Solver {
     }
 
     func sortBy(file disk: [Int?]) -> [Int?] {
-        let files = Dictionary(
-            disk.enumerated().compactMap { $0.element == nil ? nil : (
-                $0.element!, ($0.offset, 1)
-            ) },
-            uniquingKeysWith: { orig, new in
-                let i = min(orig.0, new.0)
-                let c = orig.1 + new.1
-                return (i, c)
+        let files = disk.enumerated().reduce(into: [Int: (index: Int, size: Int)]()) { f, block in
+            if let file = block.element {
+                let cur = f[file, default: (index: Int.max, size: 0)]
+                let newIndex = min(cur.index, block.offset)
+                let size = cur.size + 1
+                f[file] = (index: newIndex, size: size)
             }
-        )
+        }
 
         var sortedDisk = disk
-        printDisk(sortedDisk)
         for (id, (fi, size)) in files.sorted(by: { $0.key > $1.key }) {
             guard let freeSpace = findEmptySpace(sortedDisk, before: fi, count: size) else {
                 continue
